@@ -98,6 +98,8 @@ _ReSharper*/
 *.DotSettings.user
 *.DotSettings
 
+.DS_Store
+
 # JustCode is a .NET coding add-in
 .JustCode
 
