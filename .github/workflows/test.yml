@@ -18,10 +18,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
       - name: Setup dotnet 7.x
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ matrix.dotnet-version }}
+          dotnet-version: 7.x
 
     - name: Restore dependencies
       run: dotnet restore $SOLUTION
