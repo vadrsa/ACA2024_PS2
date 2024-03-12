@@ -42,7 +42,7 @@ public class GalacticSqlServerIndexer
 
     private async Task IndexDirectoryAsync(DirectoryInfo directoryInfo, SqlConnection connection)
     {
-        var commandText = "IF NOT EXISTS (SE LECT 1 FROM Directories WHERE Path = @Path) " +
+        var commandText = "IF NOT EXISTS (SELECT 1 FROM Directories WHERE Path = @Path) " +
                        "   INSERT INTO Directories (Path, Name, DirectoryPath, LastModified) " +
                        "   VALUES (@Path, @Name, @DirectoryPath, @LastModified) " +
                        "ELSE IF (SELECT LastModified FROM Directories WHERE Path = @Path) <> @LastModified " +
