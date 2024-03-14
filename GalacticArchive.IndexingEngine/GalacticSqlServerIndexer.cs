@@ -65,7 +65,7 @@ public class GalacticSqlServerIndexer
                                 USING (VALUES(@Path,@DirectoryPath,@Name,@ModifiedTime)) AS Source (Path,DirectoryPath,Name, LastModified)
                                 ON target.Path = source.Path
                                 WHEN MATCHED THEN
-                                UPDATE SET target.Name = source.Name, target.Size = source.Size, target.LastModified = source.LastModified
+                                UPDATE SET target.Name = source.Name, target.LastModified = source.LastModified
                                 WHEN NOT MATCHED BY TARGET THEN
                                 INSERT (Path, DirectoryPath,Name, LastModified) VALUES (source.Path,source.DirectoryPath, source.Name, source.LastModified);
                                 ";

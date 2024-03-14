@@ -16,7 +16,7 @@ DirectoryId INT FOREIGN KEY REFERENCES Directories(Id)
 )
 
 CREATE INDEX Directory_Path
-ON Directories([Path],[Name])
+ON Directories([Path])
 
 CREATE INDEX File_Path
-ON Files([Path],[Name])
+ON Files([Path])
