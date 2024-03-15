@@ -54,26 +54,40 @@ public class GalacticSqlServerIndexer
         string directoryPath = directory.FullName;
         DateTime lastModified = DateTime.UtcNow;
 
-        string query = "IF NOT EXISTS (SELECT TOP 1 FROM Directories WHERE [Path] = @Path) " +
-                        "BEGIN " +
-                        "INSERT INTO Directories ([Path], [Name], [DirectoryPath], [LastModified]) " +
-                        "VALUES (@Path, @Name, @DirectoryPath, @LastModified) " +
-                        "END " +
-                        "ELSE " +
-                        "BEGIN " +
-                        "UPDATE Directories SET [Name] = @Name, [DirectoryPath] = @DirectoryPath, [LastModified] = @LastModified " +
-                        "WHERE [Path] = @Path " +
-                        "END ";
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
-            using (SqlCommand command = new SqlCommand(query, connection))
+            await connection.OpenAsync();
+            string selectQuery = "SELECT TOP 1 * FROM Directories WHERE [Path] = @Path";
+            using (SqlCommand selectCommand = new SqlCommand(selectQuery, connection))
             {
-                command.Parameters.AddWithValue("@Path", path);
-                command.Parameters.AddWithValue("@Name", name);
-                command.Parameters.AddWithValue("@DirectoryPath", directoryPath);
-                command.Parameters.AddWithValue("@LastModified", lastModified);
+                selectCommand.Parameters.AddWithValue("@Path", path);
+                bool directoryExists = (await selectCommand.ExecuteScalarAsync() != null);
 
-                await command.ExecuteNonQueryAsync();
+                if (!directoryExists)
+                {
+                    string insertQuery = "INSERT INTO Directories ([Path], [Name], [DirectoryPath], [LastModified]) VALUES (@Path, @Name, @DirectoryPath, @LastModified)";
+                    using (SqlCommand insertCommand = new SqlCommand(insertQuery, connection))
+                    {
+                        insertCommand.Parameters.AddWithValue("@Path", path);
+                        insertCommand.Parameters.AddWithValue("@Name", name);
+                        insertCommand.Parameters.AddWithValue("@DirectoryPath", directoryPath);
+                        insertCommand.Parameters.AddWithValue("@LastModified", lastModified);
+                        await insertCommand.ExecuteNonQueryAsync();
+                    }
+                }
+                else
+                {
+                    string updateQuery = "UPDATE Directories SET [Name] = @Name, [DirectoryPath] = @DirectoryPath, [LastModified] = @LastModified WHERE [Path] = @Path " +
+                                         "AND ([Name] <> @Name OR [DirectoryPath] <> @DirectoryPath)";
+                    using (SqlCommand updateCommand = new SqlCommand(updateQuery, connection))
+                    {
+                        updateCommand.Parameters.AddWithValue("@Name", name);
+                        updateCommand.Parameters.AddWithValue("@DirectoryPath", directoryPath);
+                        updateCommand.Parameters.AddWithValue("@LastModified", lastModified);
+                        updateCommand.Parameters.AddWithValue("@Path", path);
+                        await updateCommand.ExecuteNonQueryAsync();
+                    }
+                }
             }
         }
     }
@@ -87,27 +101,41 @@ public class GalacticSqlServerIndexer
         long size = file.Length;
         DateTime lastModified = DateTime.UtcNow;
 
-        string query = "IF NOT EXISTS (SELECT TOP 1 FROM Files WHERE [Path] = @Path) " +
-                        "BEGIN " +
-                        "INSERT INTO Files ([Path], [Name], [DirectoryPath], [Size], [LastModified]) " +
-                        "VALUES (@Path, @Name, @DirectoryPath, @Size, @LastModified) " +
-                        "END " +
-                        "ELSE " +
-                        "BEGIN " +
-                        "UPDATE Files SET [Name] = @Name, [DirectoryPath] = @DirectoryPath, [Size] = @Size, [LastModified] = @LastModified " +
-                        "WHERE [Path] = @Path " +
-                        "END ";
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
-            using (SqlCommand command = new SqlCommand(query, connection))
+            await connection.OpenAsync();
+            string selectQuery = "SELECT TOP 1 * FROM Files WHERE [Path] = @Path";
+            using (SqlCommand selectCommand = new SqlCommand(selectQuery, connection))
             {
-                command.Parameters.AddWithValue("@Path", path);
-                command.Parameters.AddWithValue("@Name", name);
-                command.Parameters.AddWithValue("@DirectoryPath", directoryPath);
-                command.Parameters.AddWithValue("@Size", size);
-                command.Parameters.AddWithValue("@LastModified", lastModified);
-
-                await command.ExecuteNonQueryAsync();
+                selectCommand.Parameters.AddWithValue("@Path", path);
+                bool fileExists = (await selectCommand.ExecuteScalarAsync() != null);
+                if (!fileExists)
+                {
+                    string insertQuery = "INSERT INTO Files ([Path], [Name], [DirectoryPath], [Size], [LastModified]) VALUES (@Path, @Name, @DirectoryPath, @Size, @LastModified)";
+                    using (SqlCommand insertCommand = new SqlCommand(insertQuery, connection))
+                    {
+                        insertCommand.Parameters.AddWithValue("@Path", path);
+                        insertCommand.Parameters.AddWithValue("@Name", name);
+                        insertCommand.Parameters.AddWithValue("@DirectoryPath", directoryPath);
+                        insertCommand.Parameters.AddWithValue("@Size", size);
+                        insertCommand.Parameters.AddWithValue("@LastModified", lastModified);
+                        await insertCommand.ExecuteNonQueryAsync();
+                    }
+                }
+                else
+                {
+                    string updateQuery = "UPDATE Files SET [Name] = @Name, [DirectoryPath] = @DirectoryPath, [Size] = @Size, [LastModified] = @LastModified WHERE [Path] = @Path " +
+                                         "AND ([Name] <> @Name OR [DirectoryPath] <> @DirectoryPath OR [Size] <> @Size)";
+                    using (SqlCommand updateCommand = new SqlCommand(updateQuery, connection))
+                    {
+                        updateCommand.Parameters.AddWithValue("@Path", path);
+                        updateCommand.Parameters.AddWithValue("@Name", name);
+                        updateCommand.Parameters.AddWithValue("@DirectoryPath", directoryPath);
+                        updateCommand.Parameters.AddWithValue("@Size", size);
+                        updateCommand.Parameters.AddWithValue("@LastModified", lastModified);
+                        await updateCommand.ExecuteNonQueryAsync();
+                    }
+                }
             }
         }
     }

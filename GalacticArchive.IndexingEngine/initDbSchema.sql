@@ -15,8 +15,6 @@ CREATE TABLE Files (
     LastModified DATETIME NOT NULL
 );
 
-CREATE INDEX idx_Directories_Name ON Directories([Name]);
 CREATE INDEX idx_Directories_Path ON Directories([Path]);
 
-CREATE INDEX idx_Files_Name ON Files([Name]);
 CREATE INDEX idx_Files_Path ON Files([Path]);
